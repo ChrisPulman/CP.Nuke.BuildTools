@@ -1,4 +1,4 @@
-![License](https://img.shields.io/github/license/ChrisPulman/CP.Nuke.BuildTools.svg) [![Build](https://github.com/ChrisPulman/CP.Nuke.BuildTools/actions/workflows/BuildOnly.yml/badge.svg)](https://github.com/ChrisPulman/CP.Nuke.BuildTools/actions/workflows/BuildOnly.yml) ![Nuget](https://img.shields.io/nuget/dt/MQTTnet.Rx.Client?color=pink&style=plastic) [![NuGet](https://img.shields.io/nuget/v/MQTTnet.Rx.Client.svg?style=plastic)](https://www.nuget.org/packages/MQTTnet.Rx.Client)
+![License](https://img.shields.io/github/license/ChrisPulman/CP.Nuke.BuildTools.svg) [![Build](https://github.com/ChrisPulman/CP.Nuke.BuildTools/actions/workflows/BuildOnly.yml/badge.svg)](https://github.com/ChrisPulman/CP.Nuke.BuildTools/actions/workflows/BuildOnly.yml) ![Nuget](https://img.shields.io/nuget/dt/CP.Nuke.BuildTools?color=pink&style=plastic) [![NuGet](https://img.shields.io/nuget/v/CP.Nuke.BuildTools.svg?style=plastic)](https://www.nuget.org/packages/CP.Nuke.BuildTools)
 
 
 # CP.Nuke.BuildTools
