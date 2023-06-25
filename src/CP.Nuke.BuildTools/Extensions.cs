@@ -7,7 +7,7 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Serilog;
 
-namespace CP.Nuke.BuildTools
+namespace CP.BuildTools
 {
     /// <summary>
     /// Extensions.
@@ -62,7 +62,7 @@ namespace CP.Nuke.BuildTools
         /// Restores the solution workloads.
         /// </summary>
         /// <param name="solution">The solution.</param>
-        public static void RestoreSolutionWorkloads(this Solution solution) =>
+        public static void RestoreSolutionWorkloads(this Nuke.Common.ProjectModel.Solution solution) =>
             ProcessTasks.StartShell($"dotnet workload restore {solution}").AssertZeroExitCode();
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace CP.Nuke.BuildTools
         /// </summary>
         /// <param name="solution">The solution.</param>
         /// <returns>A List of Projects.</returns>
-        public static List<Project>? GetPackableProjects(this Solution solution) =>
+        public static List<Project>? GetPackableProjects(this Nuke.Common.ProjectModel.Solution solution) =>
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsPackable")).ToList();
 
         /// <summary>

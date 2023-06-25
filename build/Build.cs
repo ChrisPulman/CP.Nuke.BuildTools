@@ -5,11 +5,10 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.NerdbankGitVersioning;
-using Nuke.Common.Utilities.Collections;
-using Serilog;
-using CP.Nuke.BuildTools;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.DotNet;
+using Serilog;
+using CP.BuildTools;
+using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 [GitHubActions(
     "BuildOnly",
