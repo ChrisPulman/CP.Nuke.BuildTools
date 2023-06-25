@@ -153,7 +153,11 @@ namespace CP.BuildTools
                 throw;
             }
 
-            ProcessTasks.StartShell("powershell -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
+            if (!File.Exists("dotnet-install.ps1"))
+            {
+                ProcessTasks.StartShell("powershell -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
+            }
+
             foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
             {
                 Console.WriteLine($"Installing .NET SDK {version}");
