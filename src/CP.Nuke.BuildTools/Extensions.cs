@@ -27,13 +27,15 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="_">The NukeBuild.</param>
         /// <param name="version">The version.</param>
-        public static void UpdateVisualStudio(this NukeBuild _, string version = "Enterprise")
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static Task UpdateVisualStudio(this NukeBuild _, string version = "Enterprise")
         {
             ProcessTasks.StartShell("dotnet tool update -g dotnet-vs").AssertZeroExitCode();
             ProcessTasks.StartShell("vs where release").AssertZeroExitCode();
             ProcessTasks.StartShell($"vs update release {version}").AssertZeroExitCode();
             ProcessTasks.StartShell($"vs modify release {version} +mobile +desktop +uwp +web").AssertZeroExitCode();
             ProcessTasks.StartShell("vs where release").AssertZeroExitCode();
+            return Task.CompletedTask;
         }
 #pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 
@@ -74,14 +76,23 @@ namespace CP.BuildTools
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsPackable")).ToList();
 
         /// <summary>
+        /// Gets the test projects.
+        /// </summary>
+        /// <param name="solution">The solution.</param>
+        /// <returns>A List of Projects.</returns>
+        public static List<Project>? GetTestProjects(this Solution solution) =>
+            solution?.AllProjects.Where(x => x.GetProperty<bool>("IsTestProject")).ToList();
+
+        /// <summary>
         /// Installs the DotNet SDK.
         /// If the full version is not specified, then the latest version will be installed.
         /// </summary>
         /// <param name="_">The .</param>
         /// <param name="versions">The versions. The version must be in the format of either 6.x.x, or 6.0.x, or 6.0.100.</param>
         /// <exception cref="System.Exception">No matching SDK versions found to install.</exception>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-        public static async void InstallDotNetSdk(this NukeBuild _, params string[] versions)
+        public static async Task InstallDotNetSdk(this NukeBuild _, params string[] versions)
 #pragma warning restore SA1313 // Parameter names should begin with lower-case letter
         {
             const string latestsdk = "latest-sdk";
@@ -163,6 +174,8 @@ namespace CP.BuildTools
                 Console.WriteLine($"Installing .NET SDK {version}");
                 ProcessTasks.StartShell($"powershell -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel '{version}';").AssertZeroExitCode();
             }
+
+            await Task.CompletedTask.ConfigureAwait(false);
         }
     }
 }

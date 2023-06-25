@@ -33,24 +33,23 @@ class Build : NukeBuild
 
     public static int Main() => Execute<Build>(x => x.Compile);
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     [GitRepository] readonly GitRepository Repository;
     [Solution(GenerateProjects = true)] readonly Solution Solution;
     [NerdbankGitVersioning] readonly NerdbankGitVersioning NerdbankVersioning;
     [Parameter][Secret] readonly string NuGetApiKey;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
     AbsolutePath PackagesDirectory => RootDirectory / "output";
 
     Target Print => _ => _
-        .Executes(() =>
-        {
-            Log.Information("NerdbankVersioning = {Value}", NerdbankVersioning.NuGetPackageVersion);
-        });
+        .Executes(() => Log.Information("NerdbankVersioning = {Value}", NerdbankVersioning.NuGetPackageVersion));
 
     Target Clean => _ => _
         .Before(Restore)
-        .Executes(() =>
+        .Executes(async () =>
         {
             if (IsLocalBuild)
             {
@@ -58,8 +57,8 @@ class Build : NukeBuild
             }
 
             PackagesDirectory.CreateOrCleanDirectory();
-            this.UpdateVisualStudio();
-            this.InstallDotNetSdk("6.x.x", "7.x.x");
+            await this.UpdateVisualStudio();
+            await this.InstallDotNetSdk("6.x.x", "7.x.x");
         });
 
     Target Restore => _ => _
@@ -73,16 +72,13 @@ class Build : NukeBuild
 
     Target Compile => _ => _
         .DependsOn(Restore, Print)
-        .Executes(() =>
-        {
-            DotNetBuild(s => s
+        .Executes(() => DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .EnableNoRestore());
-        });
+                .EnableNoRestore()));
 
     Target Pack => _ => _
-    .After(Compile)
+    .After(Restore, Compile)
     .Produces(PackagesDirectory / "*.nupkg")
     .Executes(() =>
     {
@@ -90,7 +86,7 @@ class Build : NukeBuild
         {
             var packableProjects = Solution.GetPackableProjects();
 
-            packableProjects.ForEach(project =>
+            packableProjects?.ForEach(project =>
             {
                 Log.Information("Restoring workloads of {Input}", project);
                 project.RestoreProjectWorkload();
