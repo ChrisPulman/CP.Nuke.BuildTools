@@ -171,7 +171,7 @@ namespace CP.BuildTools
 
             foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
             {
-                var v = version.Split('.').Select(int.Parse).ToArray();
+                var v = version.Split('.').Take(2).Select(int.Parse).ToArray();
                 if (v?[0] < 5)
                 {
                     // Handle versions less than .Net 5.0 as only accepting 2 digits
