@@ -166,13 +166,23 @@ namespace CP.BuildTools
 
             if (!File.Exists("dotnet-install.ps1"))
             {
-                ProcessTasks.StartShell("powershell -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
+                ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
             }
 
             foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
             {
+                var v = version.Split('.').Select(int.Parse).ToArray();
+                if (v?[0] < 5)
+                {
+                    // Handle versions less than .Net 5.0 as only accepting 2 digits
+                    var ver = $"{v[0]}.{v[1]}";
+                    Console.WriteLine($"Installing .NET SDK {ver}");
+                    ProcessTasks.StartShell($"pwsh -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel '{ver}';").AssertZeroExitCode();
+                    continue;
+                }
+
                 Console.WriteLine($"Installing .NET SDK {version}");
-                ProcessTasks.StartShell($"powershell -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel '{version}';").AssertZeroExitCode();
+                ProcessTasks.StartShell($"pwsh -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel '{version}';").AssertZeroExitCode();
             }
 
             await Task.CompletedTask.ConfigureAwait(false);
