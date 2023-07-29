@@ -3,8 +3,10 @@
 
 using System.Text.Json.Nodes;
 using Nuke.Common;
+using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.Git;
 using Serilog;
 
 namespace CP.BuildTools
@@ -64,7 +66,7 @@ namespace CP.BuildTools
         /// Restores the solution workloads.
         /// </summary>
         /// <param name="solution">The solution.</param>
-        public static void RestoreSolutionWorkloads(this Nuke.Common.ProjectModel.Solution solution) =>
+        public static void RestoreSolutionWorkloads(this Solution solution) =>
             ProcessTasks.StartShell($"dotnet workload restore {solution}").AssertZeroExitCode();
 
         /// <summary>
@@ -72,7 +74,7 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="solution">The solution.</param>
         /// <returns>A List of Projects.</returns>
-        public static List<Project>? GetPackableProjects(this Nuke.Common.ProjectModel.Solution solution) =>
+        public static List<Project>? GetPackableProjects(this Solution solution) =>
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsPackable")).ToList();
 
         /// <summary>
@@ -82,6 +84,30 @@ namespace CP.BuildTools
         /// <returns>A List of Projects.</returns>
         public static List<Project>? GetTestProjects(this Solution solution) =>
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsTestProject")).ToList();
+        /// <summary>
+        /// Gets the project by Name.
+        /// </summary>
+        /// <param name="solution">The solution.</param>
+        /// <param name="projectName">The name of the project to find.</param>
+        /// <returns>The Project.</returns>
+        public static Project? GetProject(this Solution solution, string projectName) =>
+            solution?.Projects.FirstOrDefault(x => x.Name == projectName);
+
+        /// <summary>
+        /// Check out the source at the specified url and transfer it to the path.
+        /// </summary>
+        /// <param name="path">The output path.</param>
+        /// <param name="url">The Url to load the source from.</param>
+        public static void Checkout(this AbsolutePath path, string url)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(url))
+            {
+                return;
+            }
+
+            GitTasks.Git($"clone -s -n {url} {path.ToString("dn")}");
+            GitTasks.Git("checkout", path.ToString("dn"));
+        }
 
         /// <summary>
         /// Installs the DotNet SDK.
@@ -164,10 +190,7 @@ namespace CP.BuildTools
                 throw;
             }
 
-            if (!File.Exists("dotnet-install.ps1"))
-            {
-                ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
-            }
+            ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
 
             foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
             {
