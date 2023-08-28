@@ -10,6 +10,7 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Git;
 using Nuke.Common.Tools.GitHub;
 using Nuke.Common.Utilities.Collections;
+using Octokit;
 using Serilog;
 
 namespace CP.BuildTools
