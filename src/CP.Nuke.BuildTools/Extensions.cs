@@ -366,5 +366,27 @@ namespace CP.BuildTools
             return GitHubTasks.GitHubClient.Repository.Release
                 .Edit(repoOwner, repoName, release.Id, new ReleaseUpdate { Draft = false }).Result;
         }
+
+        /// <summary>
+        /// Installs the ASP net core.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="version">The version.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static void InstallAspNetCore(this NukeBuild _, string version)
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+        {
+            if (float.Parse(version) < 6)
+            {
+                throw new Exception("Version must be greater than or equal to 6");
+            }
+
+            if (!File.Exists("dotnet-install.ps1"))
+            {
+                ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
+            }
+
+            ProcessTasks.StartShell($"pwsh -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel {version} -Runtime aspnetcore;").AssertZeroExitCode();
+        }
     }
 }

@@ -58,7 +58,9 @@ class Build : NukeBuild
 
             PackagesDirectory.CreateOrCleanDirectory();
             await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("6.x.x", "7.x.x");
+            await this.InstallDotNetSdk("3.1.x", "5.x.x", "6.x.x", "7.x.x");
+            this.InstallAspNetCore("6.0");
+            this.InstallAspNetCore("7.0");
         });
 
     Target Restore => _ => _
@@ -112,6 +114,11 @@ class Build : NukeBuild
     {
         if (Repository.IsOnMainOrMasterBranch())
         {
+            this.CreateRelease("ChrisPulman", "CP.Nuke.BuildTools", "", NerdbankVersioning.NuGetPackageVersion, null, false)
+            .UploadDirectory(PackagesDirectory)
+            .Publish("ChrisPulman", "CP.Nuke.BuildTools")
+            .UploadReleaseAssetToGithub(PackagesDirectory);
+            
             DotNetNuGetPush(settings => settings
                         .SetSkipDuplicate(true)
                         .SetSource(this.PublicNuGetSource())
