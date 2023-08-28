@@ -51,7 +51,7 @@ class Build : NukeBuild
         .Before(Restore)
         .Executes(async () =>
         {
-            if (!IsLocalBuild)
+            if (IsLocalBuild)
             {
                 return;
             }
