@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="7.0.2" />
+  <ItemGroup>    
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Nuke.Common" Version="7.0.3" />
   </ItemGroup>
 </Project>
