@@ -2,11 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.StaticFiles;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Git;
+using Nuke.Common.Tools.GitHub;
+using Nuke.Common.Utilities.Collections;
+using Octokit;
 using Serilog;
 
 namespace CP.BuildTools
@@ -46,7 +50,9 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <returns>A string.</returns>
+#pragma warning disable RCS1224 // Make method an extension method.
         public static async Task<string> GetFileFromUrlAsync(string url)
+#pragma warning restore RCS1224 // Make method an extension method.
         {
             using (var httpClient = new HttpClient())
             {
@@ -59,7 +65,7 @@ namespace CP.BuildTools
         /// Restores the project workload.
         /// </summary>
         /// <param name="project">The project.</param>
-        public static void RestoreProjectWorkload(this Project project) =>
+        public static void RestoreProjectWorkload(this Nuke.Common.ProjectModel.Project project) =>
             ProcessTasks.StartShell($"dotnet workload restore --project {project?.Path}").AssertZeroExitCode();
 
         /// <summary>
@@ -74,7 +80,7 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="solution">The solution.</param>
         /// <returns>A List of Projects.</returns>
-        public static List<Project>? GetPackableProjects(this Solution solution) =>
+        public static List<Nuke.Common.ProjectModel.Project>? GetPackableProjects(this Solution solution) =>
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsPackable")).ToList();
 
         /// <summary>
@@ -82,7 +88,7 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="solution">The solution.</param>
         /// <returns>A List of Projects.</returns>
-        public static List<Project>? GetTestProjects(this Solution solution) =>
+        public static List<Nuke.Common.ProjectModel.Project>? GetTestProjects(this Solution solution) =>
             solution?.AllProjects.Where(x => x.GetProperty<bool>("IsTestProject")).ToList();
         /// <summary>
         /// Gets the project by Name.
@@ -90,7 +96,7 @@ namespace CP.BuildTools
         /// <param name="solution">The solution.</param>
         /// <param name="projectName">The name of the project to find.</param>
         /// <returns>The Project.</returns>
-        public static Project? GetProject(this Solution solution, string projectName) =>
+        public static Nuke.Common.ProjectModel.Project? GetProject(this Solution solution, string projectName) =>
             solution?.Projects.FirstOrDefault(x => x.Name == projectName);
 
         /// <summary>
@@ -192,7 +198,7 @@ namespace CP.BuildTools
 
             ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
 
-            foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
+            foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First()}xx").ToArray())
             {
                 var v = version.Split('.').Take(2).Select(int.Parse).ToArray();
                 if (v?[0] < 5)
@@ -209,6 +215,156 @@ namespace CP.BuildTools
             }
 
             await Task.CompletedTask.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the asset.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="repoOwner">The repo owner.</param>
+        /// <param name="repoName">Name of the repo.</param>
+        /// <param name="assetName">Name of the asset.</param>
+        /// <param name="uiReleaseTag">The UI release tag.</param>
+        /// <returns>A byte[].</returns>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static byte[] GetAsset(this NukeBuild _, string repoOwner, string repoName, string assetName, string? uiReleaseTag)
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+        {
+            Log.Information("Getting UI asset '{AssetName}' from repo {RepoOwner}/{RepoName}", assetName, repoOwner, repoName);
+            var uiRelease = string.IsNullOrWhiteSpace(uiReleaseTag)
+                ? GitHubTasks.GitHubClient.Repository.Release.GetLatest(repoOwner, repoName).Result
+                : GitHubTasks.GitHubClient.Repository.Release.Get(repoOwner, repoName, uiReleaseTag).Result;
+
+            var uiAsset = uiRelease.Assets.First(x => x.Name == assetName);
+            var downloadedAsset = GitHubTasks.GitHubClient.Connection.Get<byte[]>(new Uri(uiAsset.Url), new Dictionary<string, string>(), "application/octet-stream").Result;
+
+            Log.Information("Download Completed for asset {AssetName} of {ReleaseName}", assetName, uiRelease.Name);
+            return downloadedAsset.Body;
+        }
+
+        /// <summary>
+        /// Saves the file.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="path">The path.</param>
+        /// <param name="file">The file.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static void SaveFile(this NukeBuild _, AbsolutePath path, byte[] file)
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+        {
+            if (path.Exists())
+            {
+                return;
+            }
+
+            Log.Information("Saving file to path {Path}", path);
+            File.WriteAllBytes(path, file);
+            Log.Information("File saved to path {Path}", path);
+        }
+
+        /// <summary>
+        /// Sets the github credentials.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="authToken">The authentication token.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static void SetGithubCredentials(this NukeBuild _, string authToken) =>
+        GitHubTasks.GitHubClient = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild)))
+        {
+            Credentials = new(authToken)
+        };
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+
+        /// <summary>
+        /// Uploads the release asset to github.
+        /// </summary>
+        /// <param name="release">The release.</param>
+        /// <param name="asset">The asset.</param>
+        public static void UploadReleaseAssetToGithub(this Release release, AbsolutePath asset)
+        {
+            if (!asset.Exists())
+            {
+                return;
+            }
+
+            Log.Information("Started Uploading {FileName} to the release", Path.GetFileName(asset));
+            if (!new FileExtensionContentTypeProvider().TryGetContentType(asset, out var assetContentType))
+            {
+                assetContentType = "application/x-binary";
+            }
+
+            var releaseAssetUpload = new ReleaseAssetUpload
+            {
+                ContentType = assetContentType,
+                FileName = Path.GetFileName(asset),
+                RawData = File.OpenRead(asset)
+            };
+            _ = GitHubTasks.GitHubClient.Repository.Release.UploadAsset(release, releaseAssetUpload).Result;
+            Log.Information("Done Uploading {FileName} to the release", Path.GetFileName(asset));
+        }
+
+        /// <summary>
+        /// Uploads the directory.
+        /// </summary>
+        /// <param name="release">The release.</param>
+        /// <param name="directory">The directory.</param>
+        /// <returns>A Release.</returns>
+        public static Release UploadDirectory(this Release release, AbsolutePath directory)
+        {
+            if (directory.GlobDirectories("*").Count > 0)
+            {
+                Log.Warning("Only files on the root of {Directory} directory will be uploaded as release assets", directory);
+            }
+
+            directory.GlobFiles("*").ForEach(release.UploadReleaseAssetToGithub);
+            return release;
+        }
+
+        /// <summary>
+        /// Creates the release.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="repoOwner">The repo owner.</param>
+        /// <param name="repoName">Name of the repo.</param>
+        /// <param name="tagName">Name of the tag.</param>
+        /// <param name="version">The version.</param>
+        /// <param name="commitSha">The commit sha.</param>
+        /// <param name="isPrerelease">if set to <c>true</c> [is prerelease].</param>
+        /// <returns>
+        /// A Release.
+        /// </returns>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static Release CreateRelease(this NukeBuild _, string repoOwner, string repoName, string tagName, string? version, string? commitSha, bool isPrerelease)
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+        {
+            Log.Information("Creating release for tag {TagName}", tagName);
+            var newRelease = new NewRelease(tagName)
+            {
+                TargetCommitish = commitSha,
+                Draft = true,
+                Name = $"Release version {version}",
+                Prerelease = isPrerelease,
+                Body = string.Empty
+            };
+            return GitHubTasks.GitHubClient.Repository.Release.Create(repoOwner, repoName, newRelease).Result;
+        }
+
+        /// <summary>
+        /// Publishes the specified repo owner.
+        /// </summary>
+        /// <param name="release">The release.</param>
+        /// <param name="repoOwner">The repo owner.</param>
+        /// <param name="repoName">Name of the repo.</param>
+        /// <returns>A Release.</returns>
+        public static Release Publish(this Release release, string repoOwner, string repoName)
+        {
+            if (release == null)
+            {
+                throw new ArgumentNullException(nameof(release));
+            }
+
+            return GitHubTasks.GitHubClient.Repository.Release
+                .Edit(repoOwner, repoName, release.Id, new ReleaseUpdate { Draft = false }).Result;
         }
     }
 }

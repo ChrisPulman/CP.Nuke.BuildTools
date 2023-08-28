@@ -19,7 +19,6 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="_">The .</param>
         /// <returns>The Nuget 3 API source.</returns>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
         public static string PublicNuGetSource(this NukeBuild _) => "https://api.nuget.org/v3/index.json";
 
         /// <summary>
@@ -37,7 +36,6 @@ namespace CP.BuildTools
             ProcessTasks.StartShell("vs where release").AssertZeroExitCode();
             return Task.CompletedTask;
         }
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 
         /// <summary>
         /// Gets the file from URL asynchronous.
@@ -91,9 +89,7 @@ namespace CP.BuildTools
         /// <param name="versions">The versions. The version must be in the format of either 6.x.x, or 6.0.x, or 6.0.100.</param>
         /// <exception cref="System.Exception">No matching SDK versions found to install.</exception>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
         public static async Task InstallDotNetSdk(this NukeBuild _, params string[] versions)
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
         {
             const string latestsdk = "latest-sdk";
             var versionsToInstall = new List<int[]>();
@@ -169,7 +165,7 @@ namespace CP.BuildTools
                 ProcessTasks.StartShell("powershell -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
             }
 
-            foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First().ToString()}xx").ToArray())
+            foreach (var version in versionsToInstall.Select(arr => $"{arr[0]}.{arr[1]}.{arr[2].ToString().First()}xx").ToArray())
             {
                 var v = version.Split('.').Take(2).Select(int.Parse).ToArray();
                 if (v?[0] < 5)
