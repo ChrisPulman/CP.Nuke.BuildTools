@@ -69,7 +69,7 @@ class Build : NukeBuild
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
 
-            Solution.RestoreSolutionWorkloads();
+            ////Solution.RestoreSolutionWorkloads();
         });
 
     Target Compile => _ => _
@@ -88,11 +88,11 @@ class Build : NukeBuild
         {
             var packableProjects = Solution.GetPackableProjects();
 
-            packableProjects?.ForEach(project =>
-            {
-                Log.Information("Restoring workloads of {Input}", project);
-                project.RestoreProjectWorkload();
-            });
+            ////packableProjects?.ForEach(project =>
+            ////{
+            ////    Log.Information("Restoring workloads of {Input}", project);
+            ////    project.RestoreProjectWorkload();
+            ////});
 
             DotNetPack(settings => settings
                 .SetConfiguration(Configuration)
