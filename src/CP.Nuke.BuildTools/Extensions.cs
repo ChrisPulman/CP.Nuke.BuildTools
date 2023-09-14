@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.StaticFiles;
 using Nuke.Common;
+using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
@@ -146,7 +147,7 @@ namespace CP.BuildTools
                     {
                         // check if the version is not a preview version and if the major version matches
                         var releaseVer = x?[latestsdk]?.ToString();
-                        return releaseVer?.Contains("preview") == false && version.Item2[0].Equals(releaseVer.Split('.').Select(int.Parse).ToArray()[0]);
+                        return releaseVer?.Contains("preview") == false && releaseVer?.Contains("rc") == false && version.Item2[0].Equals(releaseVer.Split('.').Select(int.Parse).ToArray()[0]);
                     }).OrderBy(x => Math.Abs(x![latestsdk]!.ToString().CompareTo(version.v))).First();
                     var verSplit = (closestVersion?[latestsdk]?.ToString())?.Split('.').Select(int.Parse).ToArray();
 
@@ -218,6 +219,28 @@ namespace CP.BuildTools
         }
 
         /// <summary>
+        /// Installs the ASP net core.
+        /// </summary>
+        /// <param name="_">The .</param>
+        /// <param name="version">The version.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+        public static void InstallAspNetCore(this NukeBuild _, string version)
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
+        {
+            if (float.Parse(version) < 6)
+            {
+                throw new Exception("Version must be greater than or equal to 6");
+            }
+
+            if (!File.Exists("dotnet-install.ps1"))
+            {
+                ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
+            }
+
+            ProcessTasks.StartShell($"pwsh -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel {version} -Runtime aspnetcore;").AssertZeroExitCode();
+        }
+
+        /// <summary>
         /// Gets the asset.
         /// </summary>
         /// <param name="_">The .</param>
@@ -280,7 +303,7 @@ namespace CP.BuildTools
         /// </summary>
         /// <param name="release">The release.</param>
         /// <param name="asset">The asset.</param>
-        public static void UploadReleaseAssetToGithub(this Release release, AbsolutePath asset)
+        internal static void UploadReleaseAssetToGithub(this Release release, AbsolutePath asset)
         {
             if (!asset.Exists())
             {
@@ -309,7 +332,7 @@ namespace CP.BuildTools
         /// <param name="release">The release.</param>
         /// <param name="directory">The directory.</param>
         /// <returns>A Release.</returns>
-        public static Release UploadDirectory(this Release release, AbsolutePath directory)
+        internal static Release UploadDirectory(this Release release, AbsolutePath directory)
         {
             if (directory.GlobDirectories("*").Count > 0)
             {
@@ -324,8 +347,7 @@ namespace CP.BuildTools
         /// Creates the release.
         /// </summary>
         /// <param name="_">The .</param>
-        /// <param name="repoOwner">The repo owner.</param>
-        /// <param name="repoName">Name of the repo.</param>
+        /// <param name="repo">The repo.</param>
         /// <param name="tagName">Name of the tag.</param>
         /// <param name="version">The version.</param>
         /// <param name="commitSha">The commit sha.</param>
@@ -333,10 +355,16 @@ namespace CP.BuildTools
         /// <returns>
         /// A Release.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">repo.</exception>
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-        public static Release CreateRelease(this NukeBuild _, string repoOwner, string repoName, string tagName, string? version, string? commitSha, bool isPrerelease)
+        internal static Release CreateRelease(this NukeBuild _, GitRepository repo, string tagName, string? version, string? commitSha, bool isPrerelease)
 #pragma warning restore SA1313 // Parameter names should begin with lower-case letter
         {
+            if (repo == null)
+            {
+                throw new ArgumentNullException(nameof(repo));
+            }
+
             Log.Information("Creating release for tag {TagName}", tagName);
             var newRelease = new NewRelease(tagName)
             {
@@ -346,47 +374,34 @@ namespace CP.BuildTools
                 Prerelease = isPrerelease,
                 Body = string.Empty
             };
-            return GitHubTasks.GitHubClient.Repository.Release.Create(repoOwner, repoName, newRelease).Result;
+            var repoInfo = repo.Identifier.Split('/');
+            return GitHubTasks.GitHubClient.Repository.Release.Create(repoInfo[0], repoInfo[1], newRelease).Result;
         }
 
         /// <summary>
         /// Publishes the specified repo owner.
         /// </summary>
         /// <param name="release">The release.</param>
-        /// <param name="repoOwner">The repo owner.</param>
-        /// <param name="repoName">Name of the repo.</param>
-        /// <returns>A Release.</returns>
-        public static Release Publish(this Release release, string repoOwner, string repoName)
+        /// <param name="repo">The repo.</param>
+        /// <returns>
+        /// A Release.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">release.</exception>
+        internal static Release Publish(this Release release, GitRepository repo)
         {
             if (release == null)
             {
                 throw new ArgumentNullException(nameof(release));
             }
 
+            if (repo == null)
+            {
+                throw new ArgumentNullException(nameof(repo));
+            }
+
+            var repoInfo = repo.Identifier.Split('/');
             return GitHubTasks.GitHubClient.Repository.Release
-                .Edit(repoOwner, repoName, release.Id, new ReleaseUpdate { Draft = false }).Result;
-        }
-
-        /// <summary>
-        /// Installs the ASP net core.
-        /// </summary>
-        /// <param name="_">The .</param>
-        /// <param name="version">The version.</param>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-        public static void InstallAspNetCore(this NukeBuild _, string version)
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
-        {
-            if (float.Parse(version) < 6)
-            {
-                throw new Exception("Version must be greater than or equal to 6");
-            }
-
-            if (!File.Exists("dotnet-install.ps1"))
-            {
-                ProcessTasks.StartShell("pwsh -NoProfile -ExecutionPolicy unrestricted -Command Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';").AssertZeroExitCode();
-            }
-
-            ProcessTasks.StartShell($"pwsh -NoProfile -ExecutionPolicy unrestricted -Command ./dotnet-install.ps1 -Channel {version} -Runtime aspnetcore;").AssertZeroExitCode();
+                .Edit(repoInfo[0], repoInfo[1], release.Id, new ReleaseUpdate { Draft = false }).Result;
         }
     }
 }
