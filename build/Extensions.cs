@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Nuke.Common;
+using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
@@ -114,7 +115,7 @@ namespace CP.BuildTools
                     {
                         // check if the version is not a preview version and if the major version matches
                         var releaseVer = x?[latestsdk]?.ToString();
-                        return releaseVer?.Contains("preview") == false && version.Item2[0].Equals(releaseVer.Split('.').Select(int.Parse).ToArray()[0]);
+                        return releaseVer?.Contains("preview") == false && releaseVer?.Contains("rc") == false && version.Item2[0].Equals(releaseVer.Split('.').Select(int.Parse).ToArray()[0]);
                     }).OrderBy(x => Math.Abs(x![latestsdk]!.ToString().CompareTo(version.v))).First();
                     var verSplit = (closestVersion?[latestsdk]?.ToString())?.Split('.').Select(int.Parse).ToArray();
 
@@ -295,8 +296,7 @@ namespace CP.BuildTools
         /// Creates the release.
         /// </summary>
         /// <param name="_">The .</param>
-        /// <param name="repoOwner">The repo owner.</param>
-        /// <param name="repoName">Name of the repo.</param>
+        /// <param name="repo">The repo.</param>
         /// <param name="tagName">Name of the tag.</param>
         /// <param name="version">The version.</param>
         /// <param name="commitSha">The commit sha.</param>
@@ -304,10 +304,16 @@ namespace CP.BuildTools
         /// <returns>
         /// A Release.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">repo.</exception>
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-        public static Release CreateRelease(this NukeBuild _, string repoOwner, string repoName, string tagName, string? version, string? commitSha, bool isPrerelease)
+        public static Release CreateRelease(this NukeBuild _, GitRepository repo, string tagName, string? version, string? commitSha, bool isPrerelease)
 #pragma warning restore SA1313 // Parameter names should begin with lower-case letter
         {
+            if (repo == null)
+            {
+                throw new ArgumentNullException(nameof(repo));
+            }
+
             Log.Information("Creating release for tag {TagName}", tagName);
             var newRelease = new NewRelease(tagName)
             {
@@ -317,25 +323,34 @@ namespace CP.BuildTools
                 Prerelease = isPrerelease,
                 Body = string.Empty
             };
-            return GitHubTasks.GitHubClient.Repository.Release.Create(repoOwner, repoName, newRelease).Result;
+            var repoInfo = repo.Identifier.Split('/');
+            return GitHubTasks.GitHubClient.Repository.Release.Create(repoInfo[0], repoInfo[1], newRelease).Result;
         }
 
         /// <summary>
         /// Publishes the specified repo owner.
         /// </summary>
         /// <param name="release">The release.</param>
-        /// <param name="repoOwner">The repo owner.</param>
-        /// <param name="repoName">Name of the repo.</param>
-        /// <returns>A Release.</returns>
-        public static Release Publish(this Release release, string repoOwner, string repoName)
+        /// <param name="repo">The repo.</param>
+        /// <returns>
+        /// A Release.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">release.</exception>
+        public static Release Publish(this Release release, GitRepository repo)
         {
             if (release == null)
             {
                 throw new ArgumentNullException(nameof(release));
             }
 
+            if (repo == null)
+            {
+                throw new ArgumentNullException(nameof(repo));
+            }
+
+            var repoInfo = repo.Identifier.Split('/');
             return GitHubTasks.GitHubClient.Repository.Release
-                .Edit(repoOwner, repoName, release.Id, new ReleaseUpdate { Draft = false }).Result;
+                .Edit(repoInfo[0], repoInfo[1], release.Id, new ReleaseUpdate { Draft = false }).Result;
         }
 
         /// <summary>

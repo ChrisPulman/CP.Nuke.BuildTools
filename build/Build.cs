@@ -114,10 +114,11 @@ class Build : NukeBuild
     {
         if (Repository.IsOnMainOrMasterBranch())
         {
-            this.CreateRelease("ChrisPulman", "CP.Nuke.BuildTools", $"Release version {NerdbankVersioning.NuGetPackageVersion}", NerdbankVersioning.NuGetPackageVersion, null, false)
-            .UploadDirectory(PackagesDirectory)
-            .Publish("ChrisPulman", "CP.Nuke.BuildTools")
-            .UploadReleaseAssetToGithub(PackagesDirectory);
+            
+            //this.CreateRelease(Repository, $"Release version {NerdbankVersioning.NuGetPackageVersion}", NerdbankVersioning.NuGetPackageVersion, null, false)
+            //.UploadDirectory(PackagesDirectory)
+            //.Publish(Repository)
+            //.UploadReleaseAssetToGithub(PackagesDirectory);
             
             DotNetNuGetPush(settings => settings
                         .SetSkipDuplicate(true)

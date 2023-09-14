@@ -15,10 +15,7 @@ A collection of tools to assist with building .Net applications with Nuke
 * InstallDotNetSdk
 * GetAsset
 * SetGithubCredentials
-* UploadReleaseAssetToGithub
-* UploadDirectory
-* CreateRelease
-* Publish
+* InstallAspNetCore
 
 PublicNuGetSource - gets the public V3 nuget string
 
@@ -36,10 +33,4 @@ GetAsset - gets an asset from a github Release
 
 SetGithubCredentials - sets the github credentials
 
-UploadReleaseAssetToGithub - uploads a Release asset to github
-
-UploadDirectory - uploads a directory to github
-
-CreateRelease - creates a Release on github
-
-Publish - publishes a Release to github
+InstallAspNetCore - installs the aspnetcore runtime
