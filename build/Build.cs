@@ -10,19 +10,19 @@ using Serilog;
 using CP.BuildTools;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[GitHubActions(
-    "BuildOnly",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranchesIgnore = new[] { "main" },
-    FetchDepth = 0,
-    InvokedTargets = new[] { nameof(Compile) })]
-[GitHubActions(
-    "BuildDeploy",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranches = new[] { "main" },
-    FetchDepth = 0,
-    ImportSecrets = new[] { nameof(NuGetApiKey) },
-    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
+////[GitHubActions(
+////    "BuildOnly",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranchesIgnore = new[] { "main" },
+////    FetchDepth = 0,
+////    InvokedTargets = new[] { nameof(Compile) })]
+////[GitHubActions(
+////    "BuildDeploy",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranches = new[] { "main" },
+////    FetchDepth = 0,
+////    ImportSecrets = new[] { nameof(NuGetApiKey) },
+////    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -58,7 +58,7 @@ class Build : NukeBuild
 
             PackagesDirectory.CreateOrCleanDirectory();
             await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("3.1.x", "5.x.x", "6.x.x", "7.x.x");
+            await this.InstallDotNetSdk("6.x.x", "7.x.x", "8.x.x");
             this.InstallAspNetCore("6.0");
             this.InstallAspNetCore("7.0");
         });
