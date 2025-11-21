@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RunAnalyzers>false</RunAnalyzers>
+    <IsPackable>false</IsPackable>
+    <NoWarn>SA0000;SA1000;SA1001;SA1011;SA1012;SA1013;SA1200;SA1201;SA1208;SA1210;SA1600;SA1633;SA1502;SA1122</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CP.Nuke.BuildTools\CP.Nuke.BuildTools.csproj" />
+  </ItemGroup>
+</Project>
