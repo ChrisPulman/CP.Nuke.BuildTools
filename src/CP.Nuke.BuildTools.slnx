@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/SolutionSetup/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitignore" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../LICENSE" />
+    <File Path="../README.md" />
+    <File Path="../stylecop.json" />
+    <File Path="../version.json" />
+  </Folder>
+  <Project Path="../build/_build.csproj">
+    <Build Project="false" />
+  </Project>
+  <Project Path="CP.Nuke.BuildTools.Tests/CP.Nuke.BuildTools.Tests.csproj" />
+  <Project Path="CP.Nuke.BuildTools/CP.Nuke.BuildTools.csproj" />
+</Solution>

@@ -1,0 +1,4 @@
+{
+  "$schema": "https://nuke.build/parameters.schema.json",
+  "Solution": "Demo.slnx"
+}

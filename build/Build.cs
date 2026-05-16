@@ -1,13 +1,13 @@
+using CP.BuildTools;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
-using Nuke.Common.Tools.NerdbankGitVersioning;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.NerdbankGitVersioning;
 using Serilog;
-using CP.BuildTools;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 ////[GitHubActions(
@@ -31,7 +31,7 @@ class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Compile);
+    public static int Main() => Execute<Build>(x => x.Test);
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     [GitRepository] readonly GitRepository Repository;
@@ -49,18 +49,9 @@ class Build : NukeBuild
 
     Target Clean => _ => _
         .Before(Restore)
-        .Executes(async () =>
+        .Executes(() =>
         {
-            if (IsLocalBuild)
-            {
-                return;
-            }
-
             PackagesDirectory.CreateOrCleanDirectory();
-            await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("6.x.x", "7.x.x", "8.x.x");
-            this.InstallAspNetCore("6.0");
-            this.InstallAspNetCore("7.0");
         });
 
     Target Restore => _ => _
@@ -68,8 +59,6 @@ class Build : NukeBuild
         .Executes(() =>
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
-
-            ////Solution.RestoreSolutionWorkloads();
         });
 
     Target Compile => _ => _
@@ -79,8 +68,16 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .EnableNoRestore()));
 
+    Target Test => _ => _
+        .DependsOn(Compile)
+        .Executes(() => DotNetTest(s => s
+            .SetProjectFile(Solution)
+            .SetConfiguration(Configuration)
+            .EnableNoRestore()
+            .EnableNoBuild()));
+
     Target Pack => _ => _
-    .After(Restore, Compile)
+    .DependsOn(Test)
     .Produces(PackagesDirectory / "*.nupkg")
     .Executes(() =>
     {
@@ -114,12 +111,12 @@ class Build : NukeBuild
     {
         if (Repository.IsOnMainOrMasterBranch())
         {
-            
+
             //this.CreateRelease(Repository, $"Release version {NerdbankVersioning.NuGetPackageVersion}", NerdbankVersioning.NuGetPackageVersion, null, false)
             //.UploadDirectory(PackagesDirectory)
             //.Publish(Repository)
             //.UploadReleaseAssetToGithub(PackagesDirectory);
-            
+
             DotNetNuGetPush(settings => settings
                         .SetSkipDuplicate(true)
                         .SetSource(this.PublicNuGetSource())

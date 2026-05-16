@@ -35,10 +35,12 @@ jobs:
         with:
          dotnet-version: |
             10.0.x
-         dotnet-quality: 'preview'
          cache: true
          cache-dependency-path: |
            **/Directory.Packages.props
+           **/Directory.Build.props
+           **/Directory.Build.targets
+           **/*.slnx
            **/*.sln
            **/*.csproj
            **/global.json
@@ -50,6 +52,6 @@ jobs:
           path: |
             .nuke/temp
             ~/.nuget/packages
-          key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
-      - name: 'Run: Compile'
-        run: ./build.cmd Compile
+          key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.slnx', '**/*.sln', '**/*.csproj', '**/Directory.Build.props', '**/Directory.Build.targets', '**/Directory.Packages.props', '**/packages.lock.json', '**/nuget.config') }}
+      - name: 'Run: Test'
+        run: ./build.cmd Test
