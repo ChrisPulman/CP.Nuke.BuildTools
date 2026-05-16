@@ -8,5 +8,11 @@
   <ItemGroup>    
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
+    <PackageReference Include="NuGet.Packaging" Version="6.14.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>CP.Nuke.BuildTools.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

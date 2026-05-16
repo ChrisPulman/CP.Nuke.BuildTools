@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace></RootNamespace>
+    <RunAnalyzers>false</RunAnalyzers>
+    <NoWarn>CS0649</NoWarn>
+    <NukeRootDirectory>..</NukeRootDirectory>
+    <NukeScriptDirectory>..</NukeScriptDirectory>
+    <NukeTelemetryVersion>1</NukeTelemetryVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nuke.Common" Version="10.1.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.8" />
+    <ProjectReference Include="..\..\..\src\CP.Nuke.BuildTools\CP.Nuke.BuildTools.csproj" />
+  </ItemGroup>
+</Project>

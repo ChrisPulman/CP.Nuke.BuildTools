@@ -1,0 +1,12 @@
+@page "/"
+
+<PageTitle>Demo.Blazor</PageTitle>
+
+<h1>@DemoCatalog.Current.DisplayName</h1>
+
+<ul>
+    @foreach (var projectType in DemoCatalog.ProjectTypes)
+    {
+        <li>@projectType</li>
+    }
+</ul>

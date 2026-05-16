@@ -1,0 +1,23 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Demo.Avalonia/Demo.Avalonia.csproj" />
+    <Project Path="src/Demo.Blazor/Demo.Blazor.csproj" />
+    <Project Path="src/Demo.Console/Demo.Console.csproj" />
+    <Project Path="src/Demo.Grpc/Demo.Grpc.csproj" />
+    <Project Path="src/Demo.MauiWindows/Demo.MauiWindows.csproj" />
+    <Project Path="src/Demo.Shared/Demo.Shared.csproj" />
+    <Project Path="src/Demo.WebApi/Demo.WebApi.csproj" />
+    <Project Path="src/Demo.WinForms/Demo.WinForms.csproj" />
+    <Project Path="src/Demo.Worker/Demo.Worker.csproj" />
+    <Project Path="src/Demo.Wpf/Demo.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Demo.Tests/Demo.Tests.csproj" />
+  </Folder>
+  <Project Path="build/_build.csproj" />
+</Solution>

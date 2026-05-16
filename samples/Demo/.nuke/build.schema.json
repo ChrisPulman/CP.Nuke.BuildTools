@@ -26,9 +26,8 @@
       "enum": [
         "Clean",
         "Compile",
-        "Deploy",
-        "Pack",
-        "Print",
+        "Default",
+        "PrintProjectFilters",
         "Restore",
         "Test"
       ]
@@ -106,15 +105,15 @@
       "properties": {
         "Configuration": {
           "type": "string",
-          "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
+          "description": "Configuration to build",
           "enum": [
             "Debug",
             "Release"
           ]
         },
-        "NuGetApiKey": {
+        "ProjectFilter": {
           "type": "string",
-          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+          "description": "Optional substring filter matched against solution project names"
         },
         "Solution": {
           "type": "string",

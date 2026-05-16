@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.8" />
+    <PackageReference Include="TUnit" Version="1.44.39" />
+    <ProjectReference Include="..\..\src\Demo.Shared\Demo.Shared.csproj" />
+  </ItemGroup>
+</Project>
