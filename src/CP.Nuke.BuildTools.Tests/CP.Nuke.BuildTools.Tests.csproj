@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.8" />
-    <PackageReference Include="TUnit" Version="1.44.39" />
+    <PackageReference Include="TUnit" Version="1.48.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CP.Nuke.BuildTools\CP.Nuke.BuildTools.csproj" />
