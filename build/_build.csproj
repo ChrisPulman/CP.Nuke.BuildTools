@@ -17,7 +17,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.10.91" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
-    <PackageReference Include="NuGet.Packaging" Version="7.6.0" />
+    <PackageReference Include="NuGet.Packaging" Version="7.9.0" />
     <ProjectReference Include="..\src\CP.Nuke.BuildTools\CP.Nuke.BuildTools.csproj" />
   </ItemGroup>
 
